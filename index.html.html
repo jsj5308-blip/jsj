@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐶 펫 건강 지킴이 - 우리 아이 통합 스마트 케어</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+                    },
+                    colors: {
+                        pet: {
+                            50: '#fffbe1',
+                            100: '#fff3c4',
+                            400: '#ffca3a',
+                            500: '#ffb703',
+                            600: '#fb8500',
+                            bg: '#f8f9fa',
+                            card: '#ffffff',
+                            text: '#212529',
+                            muted: '#6c757d',
+                            accent: '#023e8a',
+                            danger: '#e63946',
+                            success: '#2a9d8f'
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.04)',
+                        'float': '0 12px 28px -4px rgba(0, 0, 0, 0.12)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #eef2f6;
+            color: #212529;
+            word-break: keep-all;
+        }
+
+        /* Hide scrollbars for slick mobile UI */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .active-tab {
+            color: #ea580c !important;
+            font-weight: 800;
+        }
+        .active-tab i {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+        }
+
+        /* Option Button Animation */
+        .option-card input:checked + div {
+            border-color: #ea580c;
+            background-color: #fff7ed;
+            color: #c2410c;
+            font-weight: 700;
+            box-shadow: 0 0 0 1px #ea580c;
+        }
+
+        .body-part-btn.active {
+            background-color: #ea580c;
+            color: white;
+            border-color: #ea580c;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+        }
+    </style>
+</head>
+<body class="flex justify-center items-start min-h-screen sm:py-6">
+
+    <!-- Mobile Screen Frame Wrapper -->
+    <div class="w-full max-w-md bg-white min-h-screen sm:min-h-[850px] sm:rounded-3xl shadow-2xl flex flex-col justify-between overflow-hidden relative border-0 sm:border border-slate-200">
+
+        <header class="sticky top-0 bg-white/95 backdrop-blur-md z-30 px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div id="current-pet-avatar" class="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 font-bold text-xl shadow-sm">
+                    🐶
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="current-pet-name" class="font-extrabold text-slate-900 text-base">루이</span>
+                        <span id="current-pet-badge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">강아지</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-medium" id="current-pet-sub">골든리트리버 · 3살 (28kg)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('tab-profile')" title="프로필 설정" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition text-sm">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dynamic Content Container -->
+        <main class="flex-grow overflow-y-auto no-scrollbar p-5 pb-28">
+
+            <section id="sec-checkup" class="space-y-5">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-2xl p-5 text-white shadow-soft relative overflow-hidden">
+                    <div class="relative z-10 space-y-1">
+                        <span class="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold">오늘의 1분 상태 데일리 점검</span>
+                        <h2 class="text-xl font-extrabold">오늘 우리 <span id="banner-pet-name">루이</span> 컨디션은?</h2>
+                        <p class="text-xs text-amber-100 pt-0.5">아래 4가지 항목을 눌러 오늘의 상태를 기록하세요.</p>
+                    </div>
+                    <i class="fa-solid fa-heart-pulse absolute -right-3 -bottom-3 text-8xl text-white/10"></i>
+                </div>
+
+                <!-- Quick Action Shortcuts -->
+                <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                    <button onclick="switchTab('tab-vaccine')" class="p-3 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-100 flex flex-col items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-syringe text-lg text-amber-500"></i>
+                        <span class="font-bold text-slate-700">접종/접충</span>
+                        <span id="vaccine-due-badge" class="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.2 rounded-full font-bold">D-3</span>
+                    </button>
+                    <button onclick="switchTab('tab-hospital')" class="p-3 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-100 flex flex-col items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-notes-medical text-lg text-amber-500"></i>
+                        <span class="font-bold text-slate-700">부위별증상</span>
+                        <span class="text-[9px] text-slate-400">자가진단</span>
+                    </button>
+                    <button onclick="switchTab('tab-firstaid')" class="p-3 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-100 flex flex-col items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-kit-medical text-lg text-red-500"></i>
+                        <span class="font-bold text-slate-700">응급처치</span>
+                        <span class="text-[9px] text-red-500 font-bold">골든타임</span>
+                    </button>
+                </div>
+
+                <!-- Checkup Form -->
+                <form id="checkup-form" class="space-y-3.5" onchange="calculateHealthResult()">
+                    <!-- Q1: Appetite -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-2.5">
+                        <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-utensils text-amber-500"></i> 1. 식사 및 사료 섭취</span>
+                            <span class="text-[10px] text-slate-400 font-normal">평소 대비량</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_appetite" value="0" checked class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    남김없이 맛나게 😋
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_appetite" value="1" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    절반 이하 남김 🥺
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_appetite" value="2" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    전혀 안 먹음 🚨
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Q2: Energy -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-2.5">
+                        <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-amber-500"></i> 2. 활력과 기력</span>
+                            <span class="text-[10px] text-slate-400 font-normal">활동성 수준</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_energy" value="0" checked class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    활발하고 쌩쌩⚡
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_energy" value="1" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    무기력/하루종일 수면 😴
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_energy" value="2" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    구석에 숨음/떨림 🩹
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Q3: Poop -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-2.5">
+                        <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-poop text-amber-500"></i> 3. 배변 상태</span>
+                            <span class="text-[10px] text-slate-400 font-normal">변 모양 및 색상</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_poop" value="0" checked class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    정상 쾌변 💩
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_poop" value="1" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    무른 변 / 설사 💧
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_poop" value="2" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    혈변 / 지속 구토 🩸
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Q4: Walk/Gait -->
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-2.5">
+                        <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-paw text-amber-500"></i> 4. 걸음걸이 및 통증</span>
+                            <span class="text-[10px] text-slate-400 font-normal">보행 관찰</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_gait" value="0" checked class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    자연스럽고 양호 🐕
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_gait" value="1" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    다리를 약간 젏음 🐾
+                                </div>
+                            </label>
+                            <label class="option-card cursor-pointer">
+                                <input type="radio" name="q_gait" value="2" class="hidden">
+                                <div class="p-2.5 rounded-xl border border-slate-200 text-center text-slate-600 transition">
+                                    일어서지 못함 🚑
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Health Check Score Box -->
+                <div id="result-card" class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-600"></i> 종합 분석 결과
+                        </span>
+                        <span id="result-status-tag" class="text-[11px] bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-md">매우 양호</span>
+                    </div>
+                    <p id="result-status-desc" class="text-xs text-emerald-900 font-medium leading-relaxed">
+                        아주 건강하고 좋은 컨디션을 유지하고 있습니다. 평소처럼 깨끗한 물과 적당한 산책 활동을 챙겨주세요!
+                    </p>
+                </div>
+
+                <button onclick="saveTodayCheckup()" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm shadow-soft transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-bookmark"></i>
+                    <span>오늘 상태 건강 일기에 기록하기</span>
+                </button>
+            </section>
+
+            <section id="sec-hospital" class="hidden space-y-4">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-slate-900">증상별 병원 가이드 & 부위별 탐색 🏥</h2>
+                    <p class="text-xs text-slate-500">아픈 부위를 선택하거나 증상을 검색하여 응급 여부를 확인해보세요.</p>
+                </div>
+
+                <!-- Body Parts Filter Buttons -->
+                <div class="space-y-1.5">
+                    <span class="text-[11px] font-bold text-slate-600 block">신체 부위 선택:</span>
+                    <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                        <button onclick="selectBodyPart('all')" id="bp-all" class="body-part-btn active px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">전체보기</button>
+                        <button onclick="selectBodyPart('head')" id="bp-head" class="body-part-btn px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">👁️ 머리/눈/귀</button>
+                        <button onclick="selectBodyPart('mouth')" id="bp-mouth" class="body-part-btn px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">🦷 입/치아</button>
+                        <button onclick="selectBodyPart('stomach')" id="bp-stomach" class="body-part-btn px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">🤢 배/소화기</button>
+                        <button onclick="selectBodyPart('legs')" id="bp-legs" class="body-part-btn px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">🦴 다리/관절</button>
+                        <button onclick="selectBodyPart('skin')" id="bp-skin" class="body-part-btn px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium whitespace-nowrap bg-white text-slate-700">🪮 피부/피모</button>
+                    </div>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="symptom-search" oninput="filterSymptoms()" placeholder="예: 구토, 눈곱, 다리 절음, 혈변, 웩웩..."
+                        class="w-full bg-slate-100 border-0 rounded-xl pl-9 pr-4 py-3 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                </div>
+
+                <!-- Symptom Cards List -->
+                <div id="symptom-list" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <section id="sec-food" class="hidden space-y-4">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-slate-900">이 음식 먹어도 되나요? 🥑</h2>
+                    <p class="text-xs text-slate-500">사람이 먹는 식재료나 음식의 안전성 및 중독 위험을 검색해보세요.</p>
+                </div>
+
+                <!-- Food Search Input -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="food-search" oninput="filterFoods()" placeholder="예: 사과, 초콜릿, 고구마, 포도, 파, 우유..."
+                        class="w-full bg-slate-100 border-0 rounded-xl pl-9 pr-4 py-3 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-amber-500 outline-none transition">
+                </div>
+
+                <!-- Filter Pills -->
+                <div class="flex gap-1.5 overflow-x-auto no-scrollbar text-xs">
+                    <button onclick="filterFoodTag('all')" class="food-tag-btn px-3 py-1.5 rounded-full bg-slate-900 text-white font-medium whitespace-nowrap">전체</button>
+                    <button onclick="filterFoodTag('SAFE')" class="food-tag-btn px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-medium whitespace-nowrap">⭕ 안전 급여 가능</button>
+                    <button onclick="filterFoodTag('WARN')" class="food-tag-btn px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 font-medium whitespace-nowrap">🔺 조건부/주의</button>
+                    <button onclick="filterFoodTag('DANGER')" class="food-tag-btn px-3 py-1.5 rounded-full bg-rose-100 text-rose-800 font-medium whitespace-nowrap">❌ 절대 급여 금지</button>
+                </div>
+
+                <!-- Food Cards Grid -->
+                <div id="food-grid" class="grid grid-cols-1 gap-2.5">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <section id="sec-vaccine" class="hidden space-y-5">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-slate-900">예방접종 & 구충제 관리 💉</h2>
+                    <p class="text-xs text-slate-500">심장사상충 예방약 및 정기 백신 주기를 관리해 아이 건강을 지키세요.</p>
+                </div>
+
+                <!-- Vaccine Checklist -->
+                <div class="space-y-2.5" id="vaccine-list">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Add Custom Reminder Form -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    <span class="text-xs font-bold text-slate-800 block">➕ 새로운 예방/약 일정 추가</span>
+                    <div class="space-y-2 text-xs">
+                        <input type="text" id="vac-title" placeholder="항목 이름 (예: 외부기생충 가드)" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-800">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-medium block mb-0.5">마지막 접종/복용일</label>
+                                <input type="date" id="vac-date" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-800">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 font-medium block mb-0.5">다음 주기 (일 단위)</label>
+                                <input type="number" id="vac-cycle" placeholder="30" value="30" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-800">
+                            </div>
+                        </div>
+                        <button onclick="addCustomVaccine()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+                            일정 추가하기
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-firstaid" class="hidden space-y-4">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-slate-900">응급 상황 골든타임 처치 🚨</h2>
+                    <p class="text-xs text-slate-500">병원이 문을 닫았거나 이동 중일 때 시행할 급성 응급처치 수칙입니다.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Choking -->
+                    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center font-bold text-xs">1</span>
+                            <h3 class="text-xs font-bold text-rose-900">기도 이물질 막힘 (하임리히법)</h3>
+                        </div>
+                        <p class="text-[11px] text-rose-800 leading-relaxed">
+                            입안에 이물질이 보이는 경우 손가락으로 조심히 긁어내되, 안 보이면 억지로 넣지 마세요. 소형견의 경우 등을 거꾸로 들고 명치 아래를 가볍게 툭툭 쳐올립니다.
+                        </p>
+                    </div>
+
+                    <!-- Heatstroke -->
+                    <div class="bg-orange-50 border border-orange-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-orange-500 text-white flex items-center justify-center font-bold text-xs">2</span>
+                            <h3 class="text-xs font-bold text-orange-900">열사병 / 급성 체온 상승</h3>
+                        </div>
+                        <p class="text-[11px] text-orange-800 leading-relaxed">
+                            얼음물은 핏줄을 수축시켜 오히려 위험합니다! 미지근한 물을 겨드랑이, 배, 발바닥에 적셔주고 부채나 선풍기로 체온을 천천히 낮추며 이동하세요.
+                        </p>
+                    </div>
+
+                    <!-- Poisoning -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs">3</span>
+                            <h3 class="text-xs font-bold text-amber-900">독극물 / 이물질 섭취</h3>
+                        </div>
+                        <p class="text-[11px] text-amber-800 leading-relaxed">
+                            집에서 억지로 토하게 하는 과산화수소 급여는 위천공을 유발할 수 있어 매우 위험합니다. 섭취한 물질의 포장지나 사진을 가지고 즉시 병원으로 향하세요.
+                        </p>
+                    </div>
+
+                    <!-- Seizure -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-purple-500 text-white flex items-center justify-center font-bold text-xs">4</span>
+                            <h3 class="text-xs font-bold text-purple-900">경련 및 발작 증상</h3>
+                        </div>
+                        <p class="text-[11px] text-purple-800 leading-relaxed">
+                            아이 몸을 붙잡지 마시고 부딪힐 수 있는 주변 물건을 치워주세요. 조명을 어둡게 하고 발작 시간을 동영상으로 찍어 수의사에게 보여주는 것이 가장 큰 도움이 됩니다.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-diary" class="hidden space-y-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">통합 메디컬 일지 📝</h2>
+                        <p class="text-xs text-slate-500">체중 추이와 산책, 음수량, 메모를 차곡차곡 남기세요.</p>
+                    </div>
+                </div>
+
+                <!-- Weight Chart Card -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-amber-500"></i> 최근 체중 변동 그래프 (kg)
+                        </span>
+                        <span id="weight-trend-badge" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">안정적</span>
+                    </div>
+                    <div class="h-40 w-full">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Add New Log Entry Form -->
+                <div class="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-4 space-y-3">
+                    <span class="text-xs font-bold text-amber-900 block">✏️ 오늘의 케어 기록하기</span>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-medium block mb-1">날짜</label>
+                            <input type="date" id="diary-date" class="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-bold">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-medium block mb-1">오늘 체중 (kg)</label>
+                            <input type="number" step="0.1" id="diary-weight" placeholder="예: 28.0" class="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-medium block mb-1">산책 시간 (분)</label>
+                            <input type="number" id="diary-walk" placeholder="예: 45" class="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-500 font-medium block mb-1">음수량 (ml)</label>
+                            <input type="number" id="diary-water" placeholder="예: 1200" class="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800">
+                        </div>
+                    </div>
+                    <div>
+                        <input type="text" id="diary-note" placeholder="메모 (예: 오른쪽 귀 청소 완료, 사료 잘 먹음)" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800">
+                    </div>
+                    <button onclick="addDiaryEntry()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                        기록 저장하기
+                    </button>
+                </div>
+
+                <!-- Log History List -->
+                <div class="space-y-2">
+                    <span class="text-xs font-bold text-slate-700 block">📋 최근 건강 일지 역사</span>
+                    <div id="diary-list" class="space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-profile" class="hidden space-y-5">
+                <div class="space-y-1">
+                    <h2 class="text-lg font-bold text-slate-900">반려동물 프로필 & 영양 계산기 🐾</h2>
+                    <p class="text-xs text-slate-500">기본 정보 수정 및 아이에게 필요한 1일 칼로리를 상세 측정하세요.</p>
+                </div>
+
+                <!-- Profile Form -->
+                <form onsubmit="savePetProfile(event)" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-card space-y-3 text-xs">
+                    <div>
+                        <label class="text-slate-700 font-bold block mb-1.5">반려동물 종류</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="btn-type-dog" onclick="selectPetType('dog')" class="p-2.5 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-700 font-bold">🐶 강아지</button>
+                            <button type="button" id="btn-type-cat" onclick="selectPetType('cat')" class="p-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium">🐱 고양이</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-slate-700 font-bold block mb-1">이름</label>
+                        <input type="text" id="prof-name" value="루이" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-slate-700 font-bold block mb-1">나이 (살)</label>
+                            <input type="number" step="0.5" id="prof-age" value="3" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800" oninput="recalcNutrition()">
+                        </div>
+                        <div>
+                            <label class="text-slate-700 font-bold block mb-1">현재 체중 (kg)</label>
+                            <input type="number" step="0.1" id="prof-weight" value="28" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800" oninput="recalcNutrition()">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-slate-700 font-bold block mb-1">중성화 여부</label>
+                            <select id="prof-neutered" onchange="recalcNutrition()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-medium">
+                                <option value="1.6">중성화 완료 (성견/성묘)</option>
+                                <option value="1.8">미중성화 (성견/성묘)</option>
+                                <option value="1.2">체중 감량 필요 (비만)</option>
+                                <option value="2.0">자묘/자견 (성장기)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-slate-700 font-bold block mb-1">활동량</label>
+                            <select id="prof-activity" onchange="recalcNutrition()" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-medium">
+                                <option value="1.0">보통 (일일 산책 1회)</option>
+                                <option value="1.2">높음 (에너자이저)</option>
+                                <option value="0.8">낮음 (실내 위주)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">
+                        프로필 저장하기
+                    </button>
+                </form>
+
+                <!-- Detailed Nutrition & BMR Calculator Result Box -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 space-y-3 text-xs">
+                    <span class="font-bold text-blue-900 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-calculator text-blue-600"></i> 일일 맞춤 영양 & 음수 요구량</span>
+                        <span class="text-[10px] text-blue-600 bg-blue-100 px-2 py-0.5 rounded font-bold">RER / MER 계산</span>
+                    </span>
+
+                    <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                        <div class="bg-white p-2.5 rounded-xl border border-blue-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-medium">권장 음수량</span>
+                            <span class="text-base font-extrabold text-blue-600" id="calc-water">1,400 ml</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">약 종이컵 7.7잔</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-blue-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-medium">기초 호흡 (RER)</span>
+                            <span class="text-base font-extrabold text-slate-700" id="calc-rer">852 kcal</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">최소 유지 칼로리</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-xl border border-blue-100 shadow-sm">
+                            <span class="text-[10px] text-slate-400 block font-medium">일일 권장 (MER)</span>
+                            <span class="text-base font-extrabold text-amber-600" id="calc-mer">1,363 kcal</span>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">활동 반영 총량</span>
+                        </div>
+                    </div>
+
+                    <p class="text-[10px] text-blue-800 leading-relaxed bg-white/70 p-2.5 rounded-xl">
+                        💡 <strong>사료 급여 팁:</strong> 건사료 칼로리는 대략 100g당 350~400kcal입니다. 계산된 MER을 기준으로 하루 약 <strong id="calc-kibble">340g</strong>을 2~3회 나누어 급여하세요.
+                    </p>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 px-2 py-2 flex justify-around items-center z-30">
+            <button id="nav-checkup" onclick="switchTab('tab-checkup')" class="active-tab flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500 transition py-1">
+                <i class="fa-solid fa-stethoscope text-base"></i>
+                <span class="text-[10px]">건강체크</span>
+            </button>
+            <button id="nav-hospital" onclick="switchTab('tab-hospital')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500 transition py-1">
+                <i class="fa-solid fa-hospital text-base"></i>
+                <span class="text-[10px]">증상가이드</span>
+            </button>
+            <button id="nav-food" onclick="switchTab('tab-food')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500 transition py-1">
+                <i class="fa-solid fa-apple-whole text-base"></i>
+                <span class="text-[10px]">음식안전</span>
+            </button>
+            <button id="nav-vaccine" onclick="switchTab('tab-vaccine')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500 transition py-1">
+                <i class="fa-solid fa-syringe text-base"></i>
+                <span class="text-[10px]">접종관리</span>
+            </button>
+            <button id="nav-diary" onclick="switchTab('tab-diary')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-amber-500 transition py-1">
+                <i class="fa-solid fa-book-medical text-base"></i>
+                <span class="text-[10px]">건강일지</span>
+            </button>
+        </nav>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-float hidden items-center space-x-2 z-50">
+            <i class="fa-solid fa-circle-check text-amber-400"></i>
+            <span id="toast-msg">저장되었습니다!</span>
+        </div>
+
+    </div>
+
+    <script>
+        // State
+        let pet = {
+            type: 'dog',
+            name: '루이',
+            age: 3,
+            weight: 28.0,
+            neuteredFactor: 1.6,
+            activityFactor: 1.0
+        };
+
+        let diaryData = [
+            { id: 1, date: '2026-10-18', weight: 28.5, walk: 40, water: 1300, note: '정기 예방접종 완료' },
+            { id: 2, date: '2026-10-20', weight: 28.2, walk: 50, water: 1400, note: '귀 세정 케어 완료' },
+            { id: 3, date: '2026-10-21', weight: 28.0, walk: 60, water: 1350, note: '오늘 아주 건강함!' }
+        ];
+
+        let vaccineData = [
+            { id: 1, title: '심장사상충 및 내외부 기생충', lastDate: '2026-09-25', cycleDays: 30, done: false },
+            { id: 2, title: '광견병 백신 (연 1회)', lastDate: '2025-11-10', cycleDays: 365, done: true },
+            { id: 3, title: '종합백신 (DHPPL / FVRCP)', lastDate: '2025-11-10', cycleDays: 365, done: true },
+            { id: 4, title: '켄넬코프 / 캔시바 바이러스', lastDate: '2026-04-15', cycleDays: 180, done: true }
+        ];
+
+        // Symptoms Database
+        const symptomData = [
+            {
+                title: "노란 위액이나 거품을 토해요",
+                part: "stomach",
+                urgent: "🟡 주의 (1~2일 관찰)",
+                badgeClass: "bg-amber-100 text-amber-800",
+                desc: "공복 시간이 너무 길어 위산이 역류했을 가능성이 높습니다.",
+                action: "사료 급여 간격을 3~4회로 나누어 주시고, 하루 3회 이상 연달아 토하면 병원에 가야 합니다."
+            },
+            {
+                title: "입을 벌리고 쌕쌕거려요 (개구 호흡)",
+                part: "head",
+                urgent: "🚨 즉시 응급",
+                badgeClass: "bg-rose-100 text-rose-800 font-bold",
+                desc: "체온 급상승(열사병), 심장 질환, 또는 호흡기 폐색 신호일 수 있습니다.",
+                action: "에어컨이나 시원한 물을 발바닥에 적셔주며 즉시 24시 동물병원으로 이동하세요."
+            },
+            {
+                title: "한쪽 다리를 들고 절뚝거려요",
+                part: "legs",
+                urgent: "🟠 빠른 진료 권장",
+                badgeClass: "bg-orange-100 text-orange-800",
+                desc: "소형견 슬개골 탈구, 대형견 십자인대 손상, 또는 발바닥 이물질 가시 문제일 수 있습니다.",
+                action: "관절을 주무르지 말고 산책 및 계단 오르기를 차단한 뒤 엑스레이 검사를 받으세요."
+            },
+            {
+                title: "눈을 잘 못 뜨고 노란 눈곱이 껴요",
+                part: "head",
+                urgent: "🟡 일반 진료",
+                badgeClass: "bg-amber-100 text-amber-800",
+                desc: "각막 상처(궤양)나 결막염 감염 증상일 수 있습니다.",
+                action: "넥카라를 씌워 긁지 못하게 한 후 인공눈물을 넣어주고 안과 검진을 받으세요."
+            },
+            {
+                title: "귀를 자주 털고 악취가 나요",
+                part: "head",
+                urgent: "🟡 일반 진료",
+                badgeClass: "bg-amber-100 text-amber-800",
+                desc: "외이도 곰팡이(말라세지아) 또는 귀진드기 감염 가능성이 높습니다.",
+                action: "면봉으로 깊숙이 파지 말고, 세정제로 청소 후 병원에서 이도 검사를 받으세요."
+            },
+            {
+                title: "잇몸이 빨갛고 구취가 심해요",
+                part: "mouth",
+                urgent: "🟡 일반 진료",
+                badgeClass: "bg-amber-100 text-amber-800",
+                desc: "치석 축적으로 인한 치은염 또는 치주염 진행 신호입니다.",
+                action: "치주염이 진행되면 스케일링 및 잇몸 치료가 필요합니다."
+            },
+            {
+                title: "몸을 계속 긁고 털이 빠져요",
+                part: "skin",
+                urgent: "🟡 일반 진료",
+                badgeClass: "bg-amber-100 text-amber-800",
+                desc: "식이 알레르기, 아토피, 또는 옴/모낭충 피부 질환일 수 있습니다.",
+                action: "사료 단백질원을 변경해보거나 샴푸를 약용으로 교체 후 진료를 권장합니다."
+            }
+        ];
+
+        // Food Database
+        const foodData = [
+            { name: "사과", tagStatus: "SAFE", tag: "⭕ 먹어도 돼요", tagBg: "bg-emerald-100 text-emerald-800", note: "씨앗과 심지는 독성이 있으므로 완전히 제거하고 과육만 소량 급여하세요." },
+            { name: "초콜릿 / 가공 디저트", tagStatus: "DANGER", tag: "❌ 절대 금지", tagBg: "bg-rose-100 text-rose-800 font-bold", note: "테오브로민 성분이 심장 발작과 마비를 유발합니다. 소량 섭취도 치명적입니다." },
+            { name: "포도 / 건포도", tagStatus: "DANGER", tag: "❌ 절대 금지", tagBg: "bg-rose-100 text-rose-800 font-bold", note: "급성 신부전을 일으키며 단 한 알로도 생명이 위험해질 수 있습니다." },
+            { name: "찐 고구마", tagStatus: "SAFE", tag: "⭕ 먹어도 돼요", tagBg: "bg-emerald-100 text-emerald-800", note: "식이섬유가 풍부하지만 칼로리가 높으므로 하루 한 수저 간식으로 급여하세요." },
+            { name: "양파 / 파 / 마늘 / 대파", tagStatus: "DANGER", tag: "❌ 절대 금지", tagBg: "bg-rose-100 text-rose-800 font-bold", note: "적혈구를 파괴하여 용혈성 빈혈과 혈뇨를 유발합니다. 국물도 위험합니다!" },
+            { name: "사람용 일반 우유", tagStatus: "WARN", tag: "🔺 주의 필요", tagBg: "bg-amber-100 text-amber-800", note: "유당 분해 효소가 없어 설사를 유발합니다. 반려동물 전용 락토프리 우유를 주세." },
+            { name: "익힌 닭가슴살", tagStatus: "SAFE", tag: "⭕ 먹어도 돼요", tagBg: "bg-emerald-100 text-emerald-800", note: "훌륭한 단백질원입니다. 간을 하지 않고 삶아서 결대로 찢어주세요." },
+            { name: "자일리톨 (껌/치약)", tagStatus: "DANGER", tag: "❌ 절대 금지", tagBg: "bg-rose-100 text-rose-800 font-bold", note: "급격한 인슐린 분비로 중증 저혈당과 간부전을 유발합니다." }
+        ];
+
+        let chartInstance = null;
+        let selectedBodyPart = 'all';
+
+        // DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('diary-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('vac-date').value = new Date().toISOString().split('T')[0];
+            renderSymptoms(symptomData);
+            renderFoods(foodData);
+            renderVaccines();
+            renderDiaryList();
+            initChart();
+            recalcNutrition();
+        });
+
+        // Navigation Switcher
+        function switchTab(tabKey) {
+            const tabs = ['checkup', 'hospital', 'food', 'vaccine', 'firstaid', 'diary', 'profile'];
+            tabs.forEach(t => {
+                const sec = document.getElementById(`sec-${t}`);
+                if (sec) sec.classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (navBtn) navBtn.classList.remove('active-tab');
+            });
+
+            const targetKey = tabKey.replace('tab-', '');
+            const targetSec = document.getElementById(`sec-${targetKey}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${targetKey}`);
+            if (activeNav) activeNav.classList.add('active-tab');
+        }
+
+        // Profile & Nutrition Calculator
+        function selectPetType(type) {
+            pet.type = type;
+            const btnDog = document.getElementById('btn-type-dog');
+            const btnCat = document.getElementById('btn-type-cat');
+            if (type === 'dog') {
+                btnDog.className = "p-2.5 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-700 font-bold";
+                btnCat.className = "p-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium";
+            } else {
+                btnCat.className = "p-2.5 rounded-xl border-2 border-amber-500 bg-amber-50 text-amber-700 font-bold";
+                btnDog.className = "p-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium";
+            }
+        }
+
+        function savePetProfile(e) {
+            e.preventDefault();
+            pet.name = document.getElementById('prof-name').value;
+            pet.age = parseFloat(document.getElementById('prof-age').value);
+            pet.weight = parseFloat(document.getElementById('prof-weight').value);
+
+            document.getElementById('current-pet-name').textContent = pet.name;
+            document.getElementById('current-pet-badge').textContent = pet.type === 'dog' ? '강아지' : '고양이';
+            document.getElementById('current-pet-avatar').textContent = pet.type === 'dog' ? '🐶' : '🐱';
+            document.getElementById('current-pet-sub').textContent = `${pet.type === 'dog' ? '강아지' : '고양이'} · ${pet.age}살 (${pet.weight}kg)`;
+            document.getElementById('banner-pet-name').textContent = pet.name;
+
+            recalcNutrition();
+            showToast("프로필 정보가 저장되었습니다!");
+        }
+
+        function recalcNutrition() {
+            const w = parseFloat(document.getElementById('prof-weight').value) || pet.weight;
+            const neutered = parseFloat(document.getElementById('prof-neutered').value) || 1.6;
+            const activity = parseFloat(document.getElementById('prof-activity').value) || 1.0;
+
+            // Water Requirement: 50~60 ml/kg
+            const waterMl = Math.round(w * 50);
+
+            // RER (Resting Energy Requirement) = 70 * (weight)^0.75
+            const rer = Math.round(70 * Math.pow(w, 0.75));
+
+            // MER (Maintenance Energy Requirement)
+            const mer = Math.round(rer * neutered * activity);
+
+            // Kibble weight estimate (~380 kcal / 100g)
+            const kibbleGrams = Math.round((mer / 370) * 100);
+
+            document.getElementById('calc-water').textContent = `${waterMl.toLocaleString()} ml`;
+            document.getElementById('calc-rer').textContent = `${rer.toLocaleString()} kcal`;
+            document.getElementById('calc-mer').textContent = `${mer.toLocaleString()} kcal`;
+            document.getElementById('calc-kibble').textContent = `${kibbleGrams}g`;
+        }
+
+        // Health Checkup Calculation
+        function calculateHealthResult() {
+            const form = document.getElementById('checkup-form');
+            const data = new FormData(form);
+            let score = 0;
+            for (let val of data.values()) score += parseInt(val);
+
+            const card = document.getElementById('result-card');
+            const tag = document.getElementById('result-status-tag');
+            const desc = document.getElementById('result-status-desc');
+
+            if (score === 0) {
+                card.className = "bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2";
+                tag.className = "text-[11px] bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-md";
+                tag.textContent = "매우 양호";
+                desc.textContent = "아주 건강하고 좋은 컨디션을 유지하고 있습니다. 평소처럼 깨끗한 물과 적당한 활동을 챙겨주세요!";
+            } else if (score <= 3) {
+                card.className = "bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-2";
+                tag.className = "text-[11px] bg-amber-600 text-white font-bold px-2.5 py-0.5 rounded-md";
+                tag.textContent = "주의 관찰";
+                desc.textContent = "약간의 컨디션 저하 신호가 관찰됩니다. 체온 및 식사 상태를 12시간 동안 유심히 지켜봐 주세요.";
+            } else {
+                card.className = "bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2";
+                tag.className = "text-[11px] bg-rose-600 text-white font-bold px-2.5 py-0.5 rounded-md";
+                tag.textContent = "병원 진료 권장";
+                desc.textContent = "식욕 부진, 통증 또는 배변 이상이 지속됩니다. 가까운 동물병원 수의사 선생님과 상담을 권장합니다.";
+            }
+        }
+
+        function saveTodayCheckup() {
+            const today = new Date().toISOString().split('T')[0];
+            diaryData.unshift({
+                id: Date.now(),
+                date: today,
+                weight: pet.weight,
+                walk: 45,
+                water: 1300,
+                note: "오늘의 데일리 건강 상태 점검 완료"
+            });
+            renderDiaryList();
+            updateChart();
+            showToast("오늘의 상태가 일기에 기록되었습니다.");
+        }
+
+        // Body Part & Symptom Renderer
+        function selectBodyPart(part) {
+            selectedBodyPart = part;
+            document.querySelectorAll('.body-part-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`bp-${part}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            filterSymptoms();
+        }
+
+        function renderSymptoms(items) {
+            const container = document.getElementById('symptom-list');
+            container.innerHTML = '';
+            if (items.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs">일치하는 증상이 없습니다.</div>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-100 rounded-2xl p-4 shadow-card space-y-2";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <h4 class="text-xs font-bold text-slate-800">${item.title}</h4>
+                        <span class="text-[10px] px-2 py-0.5 rounded-md shrink-0 ${item.badgeClass}">${item.urgent}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">${item.desc}</p>
+                    <div class="bg-slate-50 p-2.5 rounded-xl text-[11px] text-slate-700 font-medium border border-slate-100">
+                        💡 <strong>대처 방법:</strong> ${item.action}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterSymptoms() {
+            const query = document.getElementById('symptom-search').value.toLowerCase();
+            let filtered = symptomData;
+
+            if (selectedBodyPart !== 'all') {
+                filtered = filtered.filter(s => s.part === selectedBodyPart);
+            }
+
+            if (query) {
+                filtered = filtered.filter(s => s.title.includes(query) || s.desc.includes(query) || s.action.includes(query));
+            }
+
+            renderSymptoms(filtered);
+        }
+
+        // Food Danger Renderer
+        let currentFoodTag = 'all';
+        function renderFoods(items) {
+            const container = document.getElementById('food-grid');
+            container.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-100 rounded-2xl p-3.5 shadow-card space-y-1.5";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-800">${item.name}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-md font-bold ${item.tagBg}">${item.tag}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">${item.note}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterFoods() {
+            const query = document.getElementById('food-search').value.toLowerCase();
+            let filtered = foodData;
+
+            if (currentFoodTag !== 'all') {
+                filtered = filtered.filter(f => f.tagStatus === currentFoodTag);
+            }
+
+            if (query) {
+                filtered = filtered.filter(f => f.name.includes(query) || f.note.includes(query));
+            }
+
+            renderFoods(filtered);
+        }
+
+        function filterFoodTag(tag) {
+            currentFoodTag = tag;
+            filterFoods();
+        }
+
+        // Vaccine Manager Logic
+        function renderVaccines() {
+            const container = document.getElementById('vaccine-list');
+            container.innerHTML = '';
+
+            let minDaysLeft = 999;
+
+            vaccineData.forEach(v => {
+                const last = new Date(v.lastDate);
+                const next = new Date(last.getTime() + v.cycleDays * 24 * 60 * 60 * 1000);
+                const today = new Date();
+                const diffTime = next - today;
+                const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (daysLeft < minDaysLeft) minDaysLeft = daysLeft;
+
+                let badge = `<span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">D-${daysLeft}일 남음</span>`;
+                if (daysLeft <= 0) badge = `<span class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded font-bold">⚠️ 기한 지남</span>`;
+
+                const item = document.createElement('div');
+                item.className = "bg-white border border-slate-100 rounded-2xl p-3.5 shadow-card flex items-center justify-between";
+                item.innerHTML = `
+                    <div class="space-y-0.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-800">${v.title}</span>
+                            ${badge}
+                        </div>
+                        <p class="text-[10px] text-slate-400">마지막 접종일: ${v.lastDate} (주기: ${v.cycleDays}일)</p>
+                    </div>
+                    <button onclick="toggleVaccineDone(${v.id})" class="w-8 h-8 rounded-xl ${v.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'} flex items-center justify-center transition">
+                        <i class="fa-solid fa-check text-xs"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+
+            const dueBadge = document.getElementById('vaccine-due-badge');
+            if (minDaysLeft <= 0) {
+                dueBadge.textContent = "지연됨!";
+                dueBadge.className = "text-[9px] bg-red-500 text-white px-1.5 py-0.2 rounded-full font-bold";
+            } else {
+                dueBadge.textContent = `D-${minDaysLeft}`;
+            }
+        }
+
+        function toggleVaccineDone(id) {
+            const target = vaccineData.find(v => v.id === id);
+            if (target) {
+                target.done = !target.done;
+                if (target.done) {
+                    target.lastDate = new Date().toISOString().split('T')[0];
+                }
+                renderVaccines();
+                showToast("접종/복용 기록이 업데이트되었습니다!");
+            }
+        }
+
+        function addCustomVaccine() {
+            const title = document.getElementById('vac-title').value;
+            const lastDate = document.getElementById('vac-date').value;
+            const cycleDays = parseInt(document.getElementById('vac-cycle').value) || 30;
+
+            if (!title) {
+                showToast("항목 이름을 입력해주세요!");
+                return;
+            }
+
+            vaccineData.push({
+                id: Date.now(),
+                title,
+                lastDate,
+                cycleDays,
+                done: true
+            });
+
+            renderVaccines();
+            showToast("새로운 일정이 추가되었습니다.");
+        }
+
+        // Chart.js Weight Log Tracker
+        function initChart() {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: diaryData.map(d => d.date).reverse(),
+                    datasets: [{
+                        label: '체중 (kg)',
+                        data: diaryData.map(d => d.weight).reverse(),
+                        borderColor: '#ea580c',
+                        backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ea580c',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                        y: { grid: { color: '#f1f3f5' }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+            chartInstance.data.labels = diaryData.map(d => d.date).reverse();
+            chartInstance.data.datasets[0].data = diaryData.map(d => d.weight).reverse();
+            chartInstance.update();
+        }
+
+        function addDiaryEntry() {
+            const date = document.getElementById('diary-date').value;
+            const weight = parseFloat(document.getElementById('diary-weight').value);
+            const walk = parseInt(document.getElementById('diary-walk').value) || 0;
+            const water = parseInt(document.getElementById('diary-water').value) || 0;
+            const note = document.getElementById('diary-note').value;
+
+            if (!weight) {
+                showToast("오늘 체중을 입력해주세요!");
+                return;
+            }
+
+            diaryData.unshift({ id: Date.now(), date, weight, walk, water, note });
+            renderDiaryList();
+            updateChart();
+            showToast("새 건강 기록이 등록되었습니다.");
+        }
+
+        function renderDiaryList() {
+            const container = document.getElementById('diary-list');
+            container.innerHTML = '';
+            diaryData.forEach(d => {
+                const item = document.createElement('div');
+                item.className = "bg-white border border-slate-100 rounded-xl p-3 shadow-card space-y-1 text-xs";
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-800">${d.date}</span>
+                        <span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">${d.weight} kg</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-[11px] text-slate-500">
+                        <span>🐕 산책: ${d.walk || 0}분</span>
+                        <span>💧 음수: ${d.water || 0}ml</span>
+                    </div>
+                    ${d.note ? `<p class="text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded mt-1">${d.note}</p>` : ''}
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('flex');
+            }, 2200);
+        }
+    </script>
+</body>
+</html>
